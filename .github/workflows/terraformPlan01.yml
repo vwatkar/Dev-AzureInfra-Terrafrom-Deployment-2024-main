@@ -3,10 +3,10 @@ name: Azure Deployment with Terraform
 on:
   push:
     branches:
-      - main
+      - none
   pull_request:
     branches:
-      - main
+      - none
   workflow_dispatch: # Allows manual execution of validation
 
 jobs:
