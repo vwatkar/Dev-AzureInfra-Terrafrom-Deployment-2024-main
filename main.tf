@@ -19,7 +19,7 @@ provider "azurerm" {
   features {}
 
   client_id                   = "b9cd4882-9e02-4338-bc82-cb368abf58d2"
-  client_certificate_password = "eac8Q~uMN4ZKH9X8~RsiZ5GPDFe.8e42GH_Pfbe~"
+  client_certificate_password = "T_58Q~rA0kRy6pttIa8YflfBfqhbkLu9e4sTdals"
   tenant_id                   = "464ddb6f-b2cb-4867-a03c-cfdde7221d1b"
   subscription_id             = "37d9a058-e153-44ec-bd3d-4353dd3c9359"
 
