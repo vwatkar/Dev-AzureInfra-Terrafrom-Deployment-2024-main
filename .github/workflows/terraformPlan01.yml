@@ -1,0 +1,72 @@
+name: Azure Deployment with Terraform
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual execution of validation
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.6
+
+    - name: Authenticate to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Export Azure Environment Variables
+      run: |
+        echo "Exporting Azure credentials for Terraform"
+        echo "ARM_CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r '.clientId')" >> $GITHUB_ENV
+        echo "ARM_CLIENT_SECRET=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r '.clientSecret')" >> $GITHUB_ENV
+        echo "ARM_SUBSCRIPTION_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r '.subscriptionId')" >> $GITHUB_ENV
+        echo "ARM_TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r '.tenantId')" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Initialize Terraform
+      run: terraform init
+
+    - name: Validate Terraform
+      run: terraform validate
+
+    - name: Plan Terraform
+      id: plan
+      run: terraform plan -out=tfplan
+
+  manual-validation:
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Review Terraform Plan
+      run: |
+        echo "Reviewing Terraform plan for manual validation"
+        cat tfplan
+
+    - name: Confirm Deployment
+      run: |
+        echo "Do you want to proceed with the deployment? (yes/no)"
+        read response
+        if [ "$response" != "yes" ]; then
+          echo "Aborting deployment."
+          exit 1
+        fi
+
+    - name: Apply Terraform
+      run: terraform apply -auto-approve tfplan
